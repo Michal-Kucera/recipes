@@ -1,0 +1,35 @@
+/* Recipes - offline cache. Page: network first, cache when offline. Fonts, icons: cache first. */
+var CACHE = "recipes-1d9d68b69e";
+var CORE = ["./", "index.html", "fonts.css", "manifest.webmanifest", "fonts/fraunces-latin-175f6e93.woff2", "fonts/fraunces-latin-ext-ffbbcc88.woff2", "fonts/hanken-grotesk-latin-271d5973.woff2", "fonts/hanken-grotesk-latin-ext-6748e3a4.woff2", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512-maskable.png", "icons/icon-512.png"];
+
+self.addEventListener("install", function (e) {
+  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(CORE); }).then(function () { return self.skipWaiting(); }));
+});
+self.addEventListener("activate", function (e) {
+  e.waitUntil(caches.keys().then(function (keys) {
+    return Promise.all(keys.filter(function (k) { return k !== CACHE; }).map(function (k) { return caches.delete(k); }));
+  }).then(function () { return self.clients.claim(); }));
+});
+self.addEventListener("fetch", function (e) {
+  if (e.request.method !== "GET") return;
+  var url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) return;
+  var isPage = e.request.mode === "navigate" || url.pathname.endsWith("/") || url.pathname.endsWith("index.html");
+  if (isPage) {
+    e.respondWith(fetch(e.request).then(function (res) {
+      var copy = res.clone();
+      caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+      return res;
+    }).catch(function () {
+      return caches.match(e.request).then(function (m) { return m || caches.match("./"); });
+    }));
+    return;
+  }
+  e.respondWith(caches.match(e.request).then(function (m) {
+    return m || fetch(e.request).then(function (res) {
+      var copy = res.clone();
+      caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+      return res;
+    });
+  }));
+});
