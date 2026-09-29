@@ -37,3 +37,6 @@ $2('#shop [data-share]').dispatchEvent(new w.MouseEvent('click',{bubbles:true,ca
 T('Share hands over the list text', !!shared && shared.text.split('\n').length>3,
   shared? shared.text.split('\n').length+' lines' : 'nothing');
 console.log('   sample:', shared? shared.text.split('\n').slice(0,2).join(' | ') : '-');
+
+// assertions are synchronous; leave before jsdom's pending timers keep the process alive
+process.exit(0);

@@ -55,3 +55,6 @@ const T=(l,v,x)=>console.log((v?'PASS':'FAIL').padEnd(5),l,x===undefined?'':'  [
   click($('#reset'));
   T('reset restores', vis()===406);
 }
+
+// assertions are synchronous; leave before jsdom's pending timers keep the process alive
+process.exit(0);

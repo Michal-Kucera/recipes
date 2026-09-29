@@ -63,3 +63,6 @@ const lines=[...shop.querySelectorAll('.shoplist .txt')].map(e=>e.textContent);
 T('payload would be one line per item', lines.length>3, lines.length+' lines');
 console.log('   first lines:', lines.slice(0,3).join(' | '));
 T('no stray markup in the payload', lines.every(l=>l.indexOf('<')===-1 && l.trim().length>0));
+
+// assertions are synchronous; leave before jsdom's pending timers keep the process alive
+process.exit(0);

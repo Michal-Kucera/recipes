@@ -49,3 +49,6 @@ picks.forEach(t=>{
 });
 console.log('\nUNTAGGED lines on the list (can never be filtered):', untagged.length);
 untagged.slice(0,8).forEach(x=>console.log('   ', x));
+
+// assertions are synchronous; leave before jsdom's pending timers keep the process alive
+process.exit(0);

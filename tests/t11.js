@@ -24,6 +24,12 @@ T('one event per meal', events===3, events);
 T('no line over 75 chars', ics.split('\r\n').every(l=>l.length<=75), Math.max(...ics.split('\r\n').map(l=>l.length))+' max');
 T('floating local times (no Z, no TZID)', /DTSTART:\d{8}T080000\r\n/.test(ics) && !/DTSTART[^\r]*Z/.test(ics));
 T('breakfast 08:00, lunch 13:00, dinner 19:00', /T080000/.test(ics)&&/T130000/.test(ics)&&/T190000/.test(ics));
+// every event must end after it starts - iOS rejects the whole file otherwise ("No valid events")
+const ev=ics.split('BEGIN:VEVENT').slice(1).map(e=>({s:(e.match(/DTSTART:(\d{8}T\d{6})/)||[])[1], e:(e.match(/DTEND:(\d{8}T\d{6})/)||[])[1]}));
+T('every event ends after it starts', ev.length===3 && ev.every(x=>x.s && x.e && x.e > x.s), ev.map(x=>x.s.slice(9,13)+'-'+x.e.slice(9,13)).join(', '));
+T('start and end on the same day', ev.every(x=>x.s.slice(0,8)===x.e.slice(0,8)));
+T('lines stay within 75 octets even with accents', ics.split('\r\n').every(l=>Buffer.byteLength(l,'utf8')<=75), Math.max(...ics.split('\r\n').map(l=>Buffer.byteLength(l,'utf8')))+' max octets');
+T('folding never splits a character', !/\uFFFD/.test(ics) && Buffer.from(ics,'utf8').toString('utf8')===ics);
 const unfolded=ics.replace(/\r\n /g,'');
 T('each event links to its recipe', (unfolded.match(/URL:https:\/\/michal-kucera\.github\.io\/recipes\/#r\d+/g)||[]).length===3);
 T('notes carry ingredients and method', /INGREDIENTS\\n/.test(unfolded) && /METHOD\\n/.test(unfolded));
@@ -56,3 +62,17 @@ T('slot buttons resolve to the picked recipe', files.length===1 && files[0].text
 console.log('\n=== deep link');
 const dom2=new JSDOM(fs.readFileSync(require('path').join(__dirname,'..','Recipes.html'),'utf8'),{runScripts:'dangerously',pretendToBeVisual:true,url:'https://example.org/#r7'});
 T('#r7 opens recipe 7 on arrival', dom2.window.document.getElementById('r7').open===true);
+
+console.log('\n=== on an iPhone the export opens directly');
+const ios=new JSDOM(fs.readFileSync(require('path').join(__dirname,'..','Recipes.html'),'utf8'),{runScripts:'dangerously',pretendToBeVisual:true,url:'https://example.org/',
+  beforeParse(w){ Object.defineProperty(w.navigator,'userAgent',{get:()=>'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'}); }});
+const iw=ios.window, id=iw.document; let clicked=null;
+iw.URL.createObjectURL=()=>'blob:ios'; iw.URL.revokeObjectURL=()=>{};
+iw.HTMLAnchorElement.prototype.click=function(){ clicked={href:this.href, download:this.getAttribute('download')}; };
+id.getElementById('cal').dispatchEvent(new iw.MouseEvent('click',{bubbles:true,cancelable:true}));
+T('no download attribute on iPhone (Safari shows Add All)', clicked && clicked.download===null, JSON.stringify(clicked));
+T('it is a calendar blob', clicked && /^blob:/.test(clicked.href));
+T('the button says what to do', /Add All/.test(id.getElementById('cal').textContent), id.getElementById('cal').textContent);
+
+// assertions are synchronous; leave before jsdom's pending timers keep the process alive
+process.exit(0);

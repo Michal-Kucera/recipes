@@ -27,3 +27,6 @@ T('search ignores button text', (()=>{const q=d2.getElementById('q'); q.value='m
   return [...d2.querySelectorAll('.card')].filter(c=>!c.classList.contains('hidden')).length===0;})());
 T('search is accent-insensitive', (()=>{const q=d2.getElementById('q'); q.value='jamon'; q.dispatchEvent(new dom2.window.Event('input'));
   return [...d2.querySelectorAll('.card')].filter(c=>!c.classList.contains('hidden')).length>5;})());
+
+// assertions are synchronous; leave before jsdom's pending timers keep the process alive
+process.exit(0);

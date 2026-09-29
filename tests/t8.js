@@ -46,3 +46,6 @@ T('"Not now" closes it', $('#shop [data-setup]').classList.contains('hidden'));
 click($('#shop [data-setupopen]'));
 click($('#shop [data-setupdone]'));
 T('"Done" remembers, so it never nags again', w.localStorage.getItem('shortcut-ready-v1')==='1');
+
+// assertions are synchronous; leave before jsdom's pending timers keep the process alive
+process.exit(0);

@@ -861,7 +861,7 @@ button{cursor:pointer; touch-action:manipulation; border:0; background:none}
   <p class="foot">Recipes transcribed from the coach's messages and kept in her wording &ndash; American cups and
      ounces converted to grams and millilitres, oven temperatures to &deg;C. Spoons are unchanged: 1 tbsp = 15 ml,
      1 tsp = 5 ml. Every plate is drawn from the recipe's own ingredient list &ndash; an illustration of what you are making, not a photograph of it. The printable edition is the PDF in your Downloads folder.</p>
-  <p class="foot">Built 29 September 2026 &middot; 406 recipes.</p>
+  <p class="foot">Built 30 September 2026 &middot; 406 recipes.</p>
 </div>
 
 <script>
@@ -1570,18 +1570,20 @@ function dishSVG(r) {
   function icsEscape(t) {
     return String(t).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
   }
-  function icsFold(line) {                  /* RFC 5545: 75-octet lines, continuation starts with a space */
-    var out = [], first = true;
-    while (line.length > 0) {
-      var take = first ? 72 : 71;
-      out.push((first ? "" : " ") + line.slice(0, take));
-      line = line.slice(take); first = false;
+  function icsFold(line) {                  /* RFC 5545: lines of at most 75 octets, folded with CRLF + space */
+    var out = [], cur = "", size = 0, limit = 72;
+    for (var ch of line) {
+      var n = ch.length > 1 ? 4 : (encodeURIComponent(ch).match(/%/g) || [1]).length; /* bytes in UTF-8 */
+      if (size + n > limit) { out.push(cur); cur = " "; size = 1; limit = 73; }
+      cur += ch; size += n;
     }
+    out.push(cur);
     return out.join("\r\n");
   }
   function icsEvent(r, meal, start, seq) {
     var t = MEAL_TIME[meal] || MEAL_TIME.snack, days = servingDays(r);
-    var end = new Date(start); end.setMinutes(end.getMinutes() + t[2]);
+    var begin = new Date(start); begin.setHours(t[0], t[1], 0, 0);
+    var end = new Date(begin); end.setMinutes(end.getMinutes() + t[2]);
     var label = { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack" }[meal] || "Meal";
     var link = SITE + "#r" + r.id;
     var ing = recipeLines(r, "ul"), steps = recipeLines(r, "ol");
@@ -1593,7 +1595,7 @@ function dishSVG(r) {
       "BEGIN:VEVENT",
       "UID:recipes-" + icsLocal(start, 0, 0).slice(0, 8) + "-" + meal + "-" + r.id + "-" + seq + "@michal-kucera.github.io",
       "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""),
-      "DTSTART:" + icsLocal(start, t[0], t[1]),
+      "DTSTART:" + icsLocal(begin, begin.getHours(), begin.getMinutes()),
       "DTEND:" + icsLocal(end, end.getHours(), end.getMinutes()),
       "SUMMARY:" + icsEscape(label + ": " + r.t),
       "DESCRIPTION:" + icsEscape(desc),
@@ -1612,23 +1614,27 @@ function dishSVG(r) {
     lines.push("END:VCALENDAR");
     return lines.map(icsFold).join("\r\n") + "\r\n";
   }
-  function downloadICS(text, name) {
+  /* iPadOS reports itself as a Mac; a Mac with a touch screen is an iPad */
+  var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  function openICS(text, name) {
     var a = document.createElement("a");
     var blob = new Blob([text], { type: "text/calendar;charset=utf-8" });
     a.href = (window.URL && URL.createObjectURL) ? URL.createObjectURL(blob)
       : "data:text/calendar;charset=utf-8," + encodeURIComponent(text);
-    a.download = name;
+    if (!IOS) a.download = name;          /* iPhone: no download - Safari shows Add All directly */
     a.rel = "noopener";
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    if (a.href.indexOf("blob:") === 0) setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    if (a.href.indexOf("blob:") === 0) setTimeout(function () { URL.revokeObjectURL(a.href); }, 60000);
   }
+  var ICS_DONE = IOS ? "Tap Add All" : "Downloaded \u2013 open it and tap Add All";
   var calBtn = document.getElementById("cal");
   calBtn.addEventListener("click", function () {
     var items = MEALS.slice(0, 3).filter(function (m) { return state.picks[m.k]; })
       .map(function (m) { return { r: state.picks[m.k], meal: m.k }; });
     if (!items.length) return;
-    downloadICS(buildICS(items), "menu-" + icsLocal(new Date(), 0, 0).slice(0, 8) + ".ics");
-    calBtn.textContent = "Downloaded \u2013 open it and tap Add All";
+    openICS(buildICS(items), "menu-" + icsLocal(new Date(), 0, 0).slice(0, 8) + ".ics");
+    calBtn.textContent = ICS_DONE;
     setTimeout(function () { calBtn.textContent = "Add to Calendar"; }, 4000);
   });
 
@@ -1657,8 +1663,8 @@ function dishSVG(r) {
     var r = recipeOf(t);
     if (!r) return;
     if (t.hasAttribute("data-cal")) {
-      downloadICS(buildICS([{ r: r, meal: r.m }]), r.t.replace(/[^\w]+/g, "-").toLowerCase() + ".ics");
-      flash(t, "Downloaded \u2013 open it and tap Add All", "Add to Calendar");
+      openICS(buildICS([{ r: r, meal: r.m }]), r.t.replace(/[^\w]+/g, "-").toLowerCase() + ".ics");
+      flash(t, ICS_DONE, "Add to Calendar");
     } else if (t.hasAttribute("data-rcopy")) {
       copyText(recipeShopText(r), function (msg) {
         flash(t, msg === "Copied" ? "Copied \u2013 paste into Reminders" : msg, "Copy ingredients");

@@ -69,3 +69,6 @@ console.log('\n=== scripts off');
   T('all 406 recipes still readable', dd.querySelectorAll('.card').length===406);
   T('dead buttons are hidden', /\.cook,\.thumb\{display:none\}/.test(dd.querySelector('noscript').textContent));
 }
+
+// assertions are synchronous; leave before jsdom's pending timers keep the process alive
+process.exit(0);
