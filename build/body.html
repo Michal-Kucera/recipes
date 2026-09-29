@@ -1,0 +1,96 @@
+<div class="wrap">
+  <a class="skip" href="#sections">Skip to the recipes</a>
+  <header class="mast">
+    <h1>Recipes</h1>
+    <p>Every recipe from the coaching chat, in grams and millilitres &ndash; each one with the plate it
+       makes, drawn from its own ingredients. Spin a day's menu, or tick off what's in the fridge and
+       see what you can cook tonight.</p>
+    <div class="errbar hidden" id="errbar" role="alert"></div>
+    <div class="tip hidden" id="tip"></div>
+    <div class="stats">
+      <span><b id="s-total">{{N_TOTAL}}</b> recipes</span>
+      <span><b id="s-b">{{N_BREAKFAST}}</b> breakfast</span>
+      <span><b id="s-l">{{N_LUNCH}}</b> lunch</span>
+      <span><b id="s-d">{{N_DINNER}}</b> dinner</span>
+      <span><b id="s-s">{{N_SNACK}}</b> snacks</span>
+      <span><b id="s-i">{{N_ITEMS}}</b> ingredients</span>
+    </div>
+  </header>
+
+  <noscript>
+    <style>.cook,.thumb{display:none}</style>
+    <p class="notice">All {{N_TOTAL}} recipes are below and fully readable. The day generator, the fridge
+       filter and the drawings need JavaScript, which is switched off here &ndash; a file previewed in
+       Finder or the iPhone Files app never runs it. Open this page in Safari or Chrome for those.</p>
+  </noscript>
+
+  <section class="gen" aria-labelledby="gen-h">
+    <div class="gen-top">
+      <h2 id="gen-h">Today's menu</h2>
+      <button class="btn btn-main shuffle" id="shuffle" type="button">Shuffle the day</button>
+      <button class="btn" id="cal" type="button">Add to Calendar</button>
+      <p class="sub" id="gen-sub">Picked at random from the recipes that pass your filters.</p>
+    </div>
+    <div class="slots" id="slots"></div>
+    <div class="shop" id="shop"></div>
+  </section>
+
+  <details class="panel" id="pantry-panel">
+    <summary>
+      <h2>My kitchen</h2>
+      <span class="badge b-neut" id="pantry-sum">nothing ticked</span>
+      <span class="chev" id="pantry-chev">Open</span>
+    </summary>
+    <div class="legend">
+      <span class="k"><span class="swatch"></span> tap once &ndash; <strong>I have it</strong></span>
+      <span class="k"><span class="swatch sw-have"></span> tap again &ndash; <strong>skip recipes with it</strong></span>
+      <span class="k"><span class="swatch sw-skip"></span> tap a third time to clear</span>
+      <span class="k hidden" id="onlyhint">Tick something in here first &ndash; <em>Only what I can cook</em> has nothing to work with yet.</span>
+      <button class="link" id="clear-pantry" type="button">Clear all</button>
+    </div>
+    <div class="cats" id="cats"></div>
+  </details>
+
+  <div class="tools" id="tools">
+    <input type="search" id="q" placeholder="Search recipes and ingredients&hellip;" aria-label="Search recipes and ingredients" autocomplete="off" spellcheck="false" enterkeyhint="search">
+    <div class="opts">
+      <span class="ctl">
+        <button class="sw" id="only" type="button" role="switch" aria-checked="false" aria-label="Only recipes I can cook"></button>
+        <label for="only">Only what I can cook</label>
+      </span>
+      <span class="ctl">
+        <label for="allow">allowing</label>
+        <select id="allow">
+          <option value="0">nothing missing</option>
+          <option value="1">1 missing</option>
+          <option value="2">2 missing</option>
+          <option value="3">3 missing</option>
+          <option value="5">5 missing</option>
+          <option value="8">8 missing</option>
+        </select>
+      </span>
+      <span class="ctl">
+        <button class="sw" id="staples" type="button" role="switch" aria-checked="true" aria-label="Assume staples"></button>
+        <label for="staples">Salt, oil &amp; spices assumed</label>
+      </span>
+      <button class="link" id="reset" type="button">Reset</button>
+    </div>
+  </div>
+
+  <div class="cookbar hidden" id="cookbar" role="status"></div>
+
+  <nav class="nav" id="nav" aria-label="Jump to a course"></nav>
+
+  <div class="notice hidden" id="notice" role="status"></div>
+
+  <main id="sections">
+{{SECTIONS}}
+</main>
+
+  <button class="totop" id="totop" type="button" aria-label="Back to top">&uarr;</button>
+
+  <p class="foot">Recipes transcribed from the coach's messages and kept in her wording &ndash; American cups and
+     ounces converted to grams and millilitres, oven temperatures to &deg;C. Spoons are unchanged: 1 tbsp = 15 ml,
+     1 tsp = 5 ml. Every plate is drawn from the recipe's own ingredient list &ndash; an illustration of what you are making, not a photograph of it. The printable edition is the PDF in your Downloads folder.</p>
+  <p class="foot">Built {{BUILT}} &middot; {{N_TOTAL}} recipes.</p>
+</div>

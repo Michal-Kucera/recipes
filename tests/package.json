@@ -1,0 +1,7 @@
+{
+  "name": "recipes-tests",
+  "private": true,
+  "description": "Behavioural tests for the recipe book, run in jsdom against Recipes.html",
+  "scripts": { "test": "node run.js" },
+  "devDependencies": { "jsdom": "^25.0.0" }
+}
