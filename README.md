@@ -12,7 +12,7 @@ Live: https://michal-kucera.github.io/recipes/ · Single-file copy: `Recipes.htm
 | File | What it is |
 | --- | --- |
 | `index.html` | **Generated.** The page, with every recipe as real markup - readable without JavaScript. |
-| `app.css` | Styles. Phone-first; light and dark themes via tokens at the top. |
+| `app.css` | Styles. Phone-first; a single dark theme, tokens at the top. |
 | `app.js` | The app. Adopts the recipe markup and adds the interactive parts. |
 | `dish.js` | Draws each recipe's plate from its own ingredient tags. |
 | `data.js` | **Generated.** Ingredient vocabulary and per-recipe tags for the app. |

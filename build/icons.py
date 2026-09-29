@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GREEN, PLATE, RIM, HONEY = (52, 97, 58), (251, 248, 241), (222, 212, 194), (214, 160, 20)
-PAPER, INK, INK2 = (244, 239, 229), (35, 32, 27), (94, 87, 76)
+PAPER, INK, INK2 = (23, 20, 15), (239, 232, 220), (183, 173, 156)   # the page is dark-only
 
 
 def mark(size, pad=0.0):

@@ -1,5 +1,5 @@
 /* Document reset - the page owns its whole document now. */
-:root{color-scheme:light dark; padding-top:env(safe-area-inset-top, 0px); padding-bottom:env(safe-area-inset-bottom, 0px)}
+:root{color-scheme:dark; padding-top:env(safe-area-inset-top, 0px); padding-bottom:env(safe-area-inset-bottom, 0px)}
 html,body{margin:0}
 img{max-width:100%}
 [hidden]{display:none !important}
@@ -8,32 +8,8 @@ img{max-width:100%}
    Phone first. Everything below the base block is an enhancement
    for wider screens, never a repair of it.
    --------------------------------------------------------------- */
+/* Palette: warm charcoal, honey, sage - the only theme. */
 :root{
-  --paper:#F4EFE5; --surface:#FFFDF9; --sunk:#ECE5D8;
-  --ink:#23201B; --ink2:#5E574C; --ink3:#665F53;
-  --line:#DDD5C6; --line2:#C9BFAD;
-  --accent:#34613A; --accent-soft:#DCE8D4;
-  --warm:#7F5606; --warm-soft:#F8E8C4;
-  --have:#2C6B3B; --have-soft:#D9EBD7;
-  --miss:#A3441C; --miss-soft:#F7DFD3;
-  --shadow:0 1px 2px rgba(35,32,27,.06), 0 6px 18px -12px rgba(35,32,27,.32);
-  --r:12px;
-  --nav-h:46px;
-  --gutter:16px;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --paper:#17140F; --surface:#201C16; --sunk:#2A241C;
-    --ink:#EFE8DC; --ink2:#B7AD9C; --ink3:#9B917F;
-    --line:#35302A; --line2:#4A4336;
-    --accent:#93C48E; --accent-soft:#24331F;
-    --warm:#E7B44A; --warm-soft:#33270F;
-    --have:#82CA8A; --have-soft:#1E3322;
-    --miss:#EA946E; --miss-soft:#3A2318;
-    --shadow:0 1px 2px rgba(0,0,0,.35), 0 8px 22px -14px rgba(0,0,0,.75);
-  }
-}
-:root[data-theme="dark"]{
   --paper:#17140F; --surface:#201C16; --sunk:#2A241C;
   --ink:#EFE8DC; --ink2:#B7AD9C; --ink3:#9B917F;
   --line:#35302A; --line2:#4A4336;
@@ -42,6 +18,9 @@ img{max-width:100%}
   --have:#82CA8A; --have-soft:#1E3322;
   --miss:#EA946E; --miss-soft:#3A2318;
   --shadow:0 1px 2px rgba(0,0,0,.35), 0 8px 22px -14px rgba(0,0,0,.75);
+  --r:12px;
+  --nav-h:46px;
+  --gutter:16px;
 }
 
 *{box-sizing:border-box}
@@ -324,7 +303,7 @@ button{cursor:pointer; touch-action:manipulation; border:0; background:none}
 }
 @media (hover:hover){
   .btn:hover{border-color:var(--ink3)}
-  .btn-main:hover{background:var(--accent); border-color:var(--accent); color:#fff}
+  .btn-main:hover{background:var(--accent); border-color:var(--accent); color:var(--paper)}
   .slot .pick:hover{text-decoration-color:var(--accent); color:var(--accent)}
   .reroll:hover{color:var(--accent); border-color:var(--accent)}
   .chip:hover{border-color:var(--ink3)}
