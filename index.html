@@ -146,6 +146,18 @@ button{cursor:pointer; touch-action:manipulation; border:0; background:none}
 .shophelp ol{margin:8px 0 0; padding-left:20px}
 .shophelp li{margin-bottom:5px}
 .shophelp code{background:var(--sunk); padding:1px 5px; border-radius:4px; font-size:12px}
+.shophint{margin:9px 0 0; font-size:12.5px; color:var(--ink2)}
+.setuplink{background:none; border:0; color:var(--accent); font-size:12.5px; font-weight:600;
+  padding:6px 0; min-height:34px; text-decoration:underline; cursor:pointer}
+.setup{margin-top:14px; padding:14px var(--gutter); border-radius:var(--r); background:var(--sunk);
+  border:1px solid var(--line2); font-size:13.5px; color:var(--ink)}
+.setup h4{margin:0 0 4px; font-size:14.5px; font-family:"Hanken Grotesk",sans-serif; font-weight:700}
+.setup p{margin:0 0 8px; color:var(--ink2)}
+.setup ol{margin:0; padding-left:20px}
+.setup li{margin-bottom:6px}
+.setup code{background:var(--surface); padding:1px 5px; border-radius:4px; font-size:12.5px;
+  border:1px solid var(--line)}
+.setup .shopacts{margin-top:14px}
 .slot .meal{font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; font-weight:700; color:var(--warm)}
 .slot .pick{font-family:"Fraunces",Georgia,serif; font-size:20px; font-weight:600; line-height:1.2;
   padding:2px 0; text-align:left; color:var(--ink); text-decoration:underline;
@@ -1041,6 +1053,8 @@ function dishSVG(r) {
                 "Staples", "Other"];
   var shopEl = document.getElementById("shop");
   var shopAll = false;          /* false = leave out what is already in the kitchen */
+  var ticked = {};              /* things you ticked off in the list itself */
+  function tickKey(t) { return t.toLowerCase(); }
 
   function shoppingItems() {
     var byText = {}, order = [];
@@ -1072,8 +1086,11 @@ function dishSVG(r) {
     return order.map(function (k) { return byText[k]; });
   }
 
+  /* whatever is ticked off in the list is already handled - never export it */
   function shopText() {
-    return shoppingItems().map(function (it) { return it.text; }).join("\n");
+    return shoppingItems()
+      .filter(function (it) { return !ticked[tickKey(it.text)]; })
+      .map(function (it) { return it.text; }).join("\n");
   }
 
   function renderShop() {
@@ -1082,52 +1099,106 @@ function dishSVG(r) {
     if (!picked) { shopEl.innerHTML = ""; return; }
     var hidden = shopAll ? 0 : (function () { shopAll = true; var a = shoppingItems().length;
       shopAll = false; return a - items.length; })();
-    var html = "<h3>Shopping list</h3><p class=\"shopmeta\">" + items.length +
-      " thing" + (items.length === 1 ? "" : "s") + " for today's three meals" +
+    var off = items.filter(function (it) { return ticked[tickKey(it.text)]; }).length;
+    var html = "<h3>Shopping list</h3><p class=\"shopmeta\">" + (items.length - off) +
+      " thing" + (items.length - off === 1 ? "" : "s") + " left to buy" +
+      (off > 0 ? " \u00b7 " + off + " ticked off" : "") +
       (hidden > 0 ? " \u00b7 " + hidden + " already in your kitchen, left out" : "") + "</p>";
     var cat = null;
     html += '<ul class="shoplist">';
     AISLES.forEach(function (c) {
       items.filter(function (it) { return it.cat === c; }).forEach(function (it) {
         if (cat !== c) { html += '<li class="shopcat">' + c + "</li>"; cat = c; }
-        html += "<li><label><input type=\"checkbox\"><span class=\"txt\">" + esc(it.text) +
+        html += "<li><label><input type=\"checkbox\"" +
+          (ticked[tickKey(it.text)] ? " checked" : "") + '><span class="txt">' + esc(it.text) +
           '</span><span class="who">' + it.who + "</span></label></li>";
       });
     });
     html += "</ul>";
     html += '<div class="shopacts">' +
-      '<button class="btn" type="button" data-remind>Add to Reminders</button>' +
-      '<button class="btn" type="button" data-copy>Copy list</button>' +
+      '<button class="btn btn-main" type="button" data-copy>Copy list</button>' +
+      (navigator.share ? '<button class="btn" type="button" data-share>Share\u2026</button>' : "") +
+      (shortcutReady()
+        ? '<button class="btn" type="button" data-remind>Send to Reminders</button>' : "") +
       '<button class="btn" type="button" data-shopall>' +
-        (shopAll ? "Hide what I have" : "Show everything") + "</button></div>";
-    html += '<details class="shophelp"><summary>First time with Reminders?</summary>' +
-      "<p>iOS has no way for a web page to write to Reminders directly, so this hands the list to " +
-      "the Shortcuts app. Make this shortcut once:</p><ol>" +
-      "<li>Shortcuts app \u2192 <strong>+</strong> \u2192 add action <code>Split Text</code>, " +
-      "set Input to <em>Shortcut Input</em> and Separator to <em>New Lines</em>.</li>" +
-      "<li>Add <code>Repeat with Each</code> over the split text.</li>" +
-      "<li>Inside the repeat, add <code>Add New Reminder</code> with <em>Repeat Item</em> as the " +
-      "title, and pick your shopping list.</li>" +
-      "<li>Name it exactly <code>Add to Shopping List</code>.</li></ol>" +
-      "<p>Then this button fills it in one tap. No Shortcuts? Use <strong>Copy list</strong> and " +
-      "paste into Reminders \u2013 pasted lines become separate reminders.</p></details>";
+        (shopAll ? "Hide what I have" : "Show everything") + "</button>" +
+      (off ? '<button class="btn" type="button" data-untick>Clear ' + off + " ticked</button>" : "") +
+      "</div>" +
+      '<p class="shophint" data-hint2>Only unticked things are copied. In Reminders, tap a list and ' +
+      "paste \u2013 every line becomes its own reminder.</p>" +
+      (shortcutReady() ? "" :
+        '<button class="setuplink" type="button" data-setupopen>Send straight to Reminders instead?' +
+        "</button>") + setupHTML();
     shopEl.innerHTML = html;
   }
 
+  /* iOS gives a web page no way to write to Reminders, so this goes through the
+     Shortcuts app - which needs a shortcut of this exact name to exist first. */
+  var SHORTCUT = "Add to Shopping List", SKEY = "shortcut-ready-v1";
+  function shortcutReady() {
+    try { return localStorage.getItem(SKEY) === "1"; } catch (e) { return false; }
+  }
+  function setupHTML() {
+    return '<div class="setup hidden" data-setup><h4>Sending straight to Reminders</h4>' +
+      "<p>Apple gives web pages no way to add reminders, so this has to go through the Shortcuts " +
+      "app \u2013 and a shortcut with this exact name has to exist on your phone first. If you " +
+      "have not built it, iOS just says <em>Could not find the shortcut</em>. Copy and paste " +
+      "needs none of this. To build it once:</p><ol>" +
+      "<li>Open <strong>Shortcuts</strong> \u2192 <strong>+</strong> to make a new one.</li>" +
+      "<li>Add <code>Split Text</code>. Set Input to <em>Shortcut Input</em> and " +
+      "Separator to <em>New Lines</em>.</li>" +
+      "<li>Add <code>Repeat with Each</code>, with the <em>Split Text</em> result as input.</li>" +
+      "<li>Inside the repeat, add <code>Add New Reminder</code>. Set the title to " +
+      "<em>Repeat Item</em> and choose your shopping list.</li>" +
+      "<li>Name it exactly <code>" + SHORTCUT + "</code> and save.</li></ol>" +
+      '<div class="shopacts">' +
+      '<button class="btn btn-main" type="button" data-setupdone>I built it \u2013 send now</button>' +
+      '<button class="btn" type="button" data-setupcancel>Not now</button></div></div>';
+  }
+  function sendToReminders() {
+    window.location.href = "shortcuts://x-callback-url/run-shortcut?name=" +
+      encodeURIComponent(SHORTCUT) + "&input=text&text=" + encodeURIComponent(shopText());
+  }
+
+  shopEl.addEventListener("change", function (e) {
+    var cb = e.target;
+    if (!cb || cb.type !== "checkbox") return;
+    var lab = cb.closest("label");
+    if (!lab) return;
+    var k = tickKey(lab.querySelector(".txt").textContent);
+    if (cb.checked) ticked[k] = 1; else delete ticked[k];
+    renderShop();
+  });
+
   shopEl.addEventListener("click", function (e) {
-    var t = e.target;
+    var t = e.target, setup = shopEl.querySelector("[data-setup]");
+    if (t.closest("[data-untick]")) { ticked = {}; renderShop(); return; }
     if (t.closest("[data-shopall]")) { shopAll = !shopAll; renderShop(); return; }
     if (t.closest("[data-copy]")) { copyList(t.closest("[data-copy]")); return; }
-    if (t.closest("[data-remind]")) {
-      window.location.href = "shortcuts://x-callback-url/run-shortcut?name=" +
-        encodeURIComponent("Add to Shopping List") + "&input=text&text=" +
-        encodeURIComponent(shopText());
+    if (t.closest("[data-setupcancel]")) { setup.classList.add("hidden"); return; }
+    if (t.closest("[data-setupdone]")) {
+      try { localStorage.setItem(SKEY, "1"); } catch (err) {}
+      renderShop();                 /* the button only exists once the shortcut does */
+      sendToReminders();
+      return;
     }
+    if (t.closest("[data-share]")) {
+      navigator.share({ title: "Shopping list", text: shopText() }).catch(function () {});
+      return;
+    }
+    if (t.closest("[data-setupopen]")) {
+      setup.classList.remove("hidden");
+      setup.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+    if (t.closest("[data-remind]")) { sendToReminders(); }
   });
 
   function copyList(btn) {
     var text = shopText(), done = function (msg) {
       btn.textContent = msg;
+      var h = shopEl.querySelector("[data-hint2]");
+      if (h && msg === "Copied") h.textContent = "Copied. Open Reminders, tap a list and paste.";
       setTimeout(function () { btn.textContent = "Copy list"; }, 1800);
     };
     if (navigator.clipboard && navigator.clipboard.writeText) {
